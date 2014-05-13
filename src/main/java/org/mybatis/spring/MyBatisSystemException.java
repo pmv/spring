@@ -37,4 +37,8 @@ public class MyBatisSystemException extends UncategorizedDataAccessException {
     super(null, cause);
   }
 
+  public MyBatisSystemException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+  
 }

@@ -18,9 +18,11 @@ package org.mybatis.spring.transaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.mybatis.spring.AbstractMyBatisSpringTest;
+import org.mybatis.spring.MyBatisSystemException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
@@ -94,6 +96,21 @@ public final class SpringTransactionManagerTest extends AbstractMyBatisSpringTes
     transaction.close();
     assertEquals("should call commit on Connection", 1, connection.getNumberCommits());
     assertTrue("should close the Connection", connection.isClosed());
+  }
+
+  @Test
+  public void shouldThrowExceptionIfSpringOnlySpecified() throws Exception {
+    SpringManagedTransactionFactory transactionFactory = new SpringManagedTransactionFactory();
+    transactionFactory.setAllowOnlySpringManagedTransactions(true);
+    SpringManagedTransaction transaction = (SpringManagedTransaction) transactionFactory.newTransaction(dataSource, null, true);
+    transaction.getConnection();
+    try {
+      transaction.commit();
+      fail("Exception should have been thrown");
+    } catch (MyBatisSystemException e) {
+      assertEquals("should not call commit on Connection", 0, connection.getNumberCommits());
+      assertTrue("should close the Connection", connection.isClosed());
+    }
   }
 
 }

@@ -33,11 +33,13 @@ import org.apache.ibatis.transaction.TransactionFactory;
  */
 public class SpringManagedTransactionFactory implements TransactionFactory {
 
+  private boolean allowOnlySpringManagedTransactions = false;
+
   /**
    * {@inheritDoc}
    */
   public Transaction newTransaction(DataSource dataSource, TransactionIsolationLevel level, boolean autoCommit) {
-    return new SpringManagedTransaction(dataSource);
+    return new SpringManagedTransaction(dataSource, allowOnlySpringManagedTransactions);
   }
 
   /**
@@ -52,6 +54,11 @@ public class SpringManagedTransactionFactory implements TransactionFactory {
    */
   public void setProperties(Properties props) {
     // not needed in this version
+  }
+
+  public void setAllowOnlySpringManagedTransactions(
+    boolean allowOnlySpringManagedTransactions) {
+    this.allowOnlySpringManagedTransactions = allowOnlySpringManagedTransactions;
   }
 
 }

@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.transaction.Transaction;
+import org.mybatis.spring.MyBatisSystemException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 /**
@@ -48,15 +49,18 @@ public class SpringManagedTransaction implements Transaction {
 
   private final DataSource dataSource;
 
+  private final boolean allowOnlySpringManagedTransactions;
+
   private Connection connection;
 
   private boolean isConnectionTransactional;
 
   private boolean autoCommit;
 
-  public SpringManagedTransaction(DataSource dataSource) {
+  public SpringManagedTransaction(DataSource dataSource, boolean allowOnlySpringManagedTransactions) {
     notNull(dataSource, "No DataSource specified");
     this.dataSource = dataSource;
+    this.allowOnlySpringManagedTransactions = allowOnlySpringManagedTransactions;
   }
 
   /**
@@ -97,6 +101,11 @@ public class SpringManagedTransaction implements Transaction {
    */
   public void commit() throws SQLException {
     if (this.connection != null && !this.isConnectionTransactional && !this.autoCommit) {
+      if(this.allowOnlySpringManagedTransactions) {
+          this.rollback();
+          this.close();
+          throw new MyBatisSystemException("Transactions not managed by spring have been disabled.", null);
+      }
       if (logger.isDebugEnabled()) {
         logger.debug("Committing JDBC Connection [" + this.connection + "]");
       }
